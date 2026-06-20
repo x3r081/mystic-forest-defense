@@ -1,0 +1,183 @@
+.panel {
+  position: absolute;
+  top: 5.5rem;
+  right: 1.25rem;
+  z-index: 45;
+  width: min(320px, 90vw);
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  background: linear-gradient(165deg, rgba(16, 38, 28, 0.94), rgba(8, 18, 13, 0.96));
+  border: 1px solid rgba(126, 249, 196, 0.28);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(14px);
+  pointer-events: auto;
+  font-family: var(--mff-font-display);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.kicker {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mff-text-muted);
+}
+
+.title {
+  margin: 0.2rem 0 0;
+  font-family: var(--mff-font-title);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.power {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  color: var(--mff-glow);
+  font-style: italic;
+}
+
+.close {
+  background: none;
+  border: none;
+  color: var(--mff-text-muted);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.1rem 0.35rem;
+}
+
+.levelBadge {
+  margin-top: 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--mff-glow);
+}
+
+.levelRoman {
+  font-weight: 500;
+  color: var(--mff-text-muted);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.4rem;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.statLabel {
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mff-text-muted);
+}
+
+.statValue {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.special {
+  margin: 0.55rem 0 0;
+  font-size: 0.72rem;
+  color: var(--mff-text-muted);
+}
+
+.actions {
+  display: flex;
+  gap: 0.45rem;
+  margin-top: 0.85rem;
+}
+
+.btnUpgrade,
+.btnSell,
+.btnMax {
+  flex: 1;
+  padding: 0.5rem 0.6rem;
+  border-radius: 10px;
+  border: 1px solid rgba(126, 249, 196, 0.35);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btnUpgrade {
+  background: rgba(126, 249, 196, 0.15);
+  color: var(--mff-glow);
+}
+
+.btnUpgrade:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btnSell {
+  background: rgba(255, 180, 80, 0.12);
+  color: #ffc880;
+  border-color: rgba(255, 180, 80, 0.35);
+}
+
+.btnMax {
+  background: rgba(255, 224, 128, 0.12);
+  color: #ffe080;
+  border-color: rgba(255, 224, 128, 0.4);
+  cursor: default;
+}
+
+.mergeSection {
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(126, 249, 196, 0.15);
+}
+
+.mergeLabel {
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mff-text-muted);
+}
+
+.mergeList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+}
+
+.mergeBtn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.45rem 0.6rem;
+  border-radius: 10px;
+  border: 1px solid rgba(180, 140, 255, 0.35);
+  background: rgba(120, 80, 200, 0.12);
+  color: #d8c0ff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mergeBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.mergeCost {
+  color: var(--mff-ember);
+}

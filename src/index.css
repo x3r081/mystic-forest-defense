@@ -1,0 +1,58 @@
+:root {
+  /* Mystic forest theme tokens (mirrors src/data/theme.ts) */
+  --mff-night: #0a0f1a;
+  --mff-deep-forest: #0d2018;
+  --mff-forest: #163a2b;
+  --mff-moss: #3fae6b;
+  --mff-glow: #7ef9c4;
+  --mff-mist: #9fd9ff;
+  --mff-arcane: #a78bfa;
+  --mff-ember: #ffd27a;
+  --mff-text: #e8fff4;
+  --mff-text-muted: #9fc4b4;
+
+  /* Cinzel for fantasy hero titles; Inter for crisp, legible UI + numerals. */
+  --mff-font-title: 'Cinzel', Georgia, 'Times New Roman', serif;
+  --mff-font-display: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mff-font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  color-scheme: dark;
+  color: var(--mff-text);
+  font-family: var(--mff-font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--mff-night);
+}
+
+/* Prevent accidental text selection / long-press callouts during play. */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Respect users who prefer reduced motion: calm the 2D UI animations. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

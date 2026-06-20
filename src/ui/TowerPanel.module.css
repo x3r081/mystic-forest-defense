@@ -1,0 +1,363 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: min(900px, 96vw);
+  padding: 0.7rem 0.9rem;
+  border-radius: 18px;
+  background: rgba(13, 32, 24, 0.62);
+  border: 1px solid rgba(126, 249, 196, 0.18);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.heading {
+  font-family: var(--mff-font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mff-text-muted);
+}
+
+.coins {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--mff-font-display);
+  font-weight: 700;
+  color: var(--mff-text);
+}
+
+.coinIcon {
+  color: var(--mff-ember);
+  filter: drop-shadow(0 0 6px currentColor);
+}
+
+.modeRow {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.modeButton {
+  flex: 1;
+  padding: 0.35rem 0.5rem;
+  border-radius: 10px;
+  border: 1px solid rgba(126, 249, 196, 0.2);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--mff-text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.modeButtonActive {
+  color: var(--mff-glow);
+  border-color: var(--mff-glow);
+  background: rgba(126, 249, 196, 0.08);
+}
+
+.modeButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.card {
+  position: relative;
+  flex: 1 1 165px;
+  min-width: 165px;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  text-align: left;
+  color: var(--mff-text);
+  transition: transform 0.12s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  background: rgba(0, 0, 0, 0.42);
+  border-color: color-mix(in srgb, var(--gem) 50%, transparent);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--gem) 30%, transparent);
+}
+
+.cardSelected {
+  border-color: var(--gem);
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 0 1px var(--gem), 0 0 22px color-mix(in srgb, var(--gem) 55%, transparent);
+}
+
+.cardDisabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cardDisabled:hover {
+  transform: none;
+}
+
+.gem {
+  position: relative;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--gem) 85%, white 10%), color-mix(in srgb, var(--gem) 60%, black 25%));
+  box-shadow: 0 0 16px color-mix(in srgb, var(--gem) 70%, transparent), inset 0 0 6px rgba(255, 255, 255, 0.35);
+  transform: rotate(45deg);
+}
+
+.gemIcon {
+  transform: rotate(-45deg);
+  font-size: 1.05rem;
+  line-height: 1;
+  color: #0a0f1a;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.nameRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.name {
+  font-family: var(--mff-font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cost {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--mff-ember);
+  flex-shrink: 0;
+}
+
+.statRow {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--mff-text-muted);
+}
+
+.statGlyph {
+  font-size: 0.72rem;
+  color: color-mix(in srgb, var(--gem) 75%, white 10%);
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--gem) 60%, transparent));
+}
+
+.costInsufficient {
+  color: #ff6a86;
+}
+
+.hint {
+  margin: 0;
+  text-align: center;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--mff-text-muted);
+  min-height: 0.9rem;
+}
+
+.hintActive {
+  color: var(--mff-glow);
+}
+
+/* ---- Hover tooltip ---- */
+.tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 12px);
+  transform: translate(-50%, 6px);
+  width: 250px;
+  padding: 0.75rem 0.85rem;
+  border-radius: 14px;
+  background: linear-gradient(160deg, rgba(11, 26, 20, 0.96), rgba(7, 16, 12, 0.96));
+  border: 1px solid color-mix(in srgb, var(--gem) 45%, transparent);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.6), 0 0 24px color-mix(in srgb, var(--gem) 30%, transparent);
+  backdrop-filter: blur(14px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  z-index: 30;
+}
+
+.card:hover .tooltip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 7px solid transparent;
+  border-top-color: rgba(7, 16, 12, 0.96);
+}
+
+.tooltipHead {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.tooltipIcon {
+  display: grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  flex-shrink: 0;
+  border-radius: 8px;
+  font-size: 1.05rem;
+  color: #0a0f1a;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--gem) 85%, white 10%), color-mix(in srgb, var(--gem) 55%, black 25%));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--gem) 60%, transparent);
+}
+
+.tooltipName {
+  font-family: var(--mff-font-display);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--mff-text);
+}
+
+.tooltipTrait {
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--gem) 70%, white 20%);
+}
+
+.tooltipCost {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--mff-ember);
+}
+
+.tooltipDesc {
+  margin: 0.6rem 0 0;
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: var(--mff-text-muted);
+}
+
+.tooltipStats {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.65rem;
+}
+
+.tooltipStat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.4rem 0.2rem;
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tooltipStatLabel {
+  font-size: 0.54rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mff-text-muted);
+}
+
+.tooltipStatValue {
+  font-size: 0.92rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--mff-text);
+}
+
+.tooltipSpecial {
+  margin: 0.6rem 0 0;
+  padding-top: 0.55rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--mff-glow);
+}
+
+/* ---- Tablet tuning ---- */
+@media (max-width: 920px) {
+  .panel {
+    width: min(900px, 98vw);
+    padding: 0.6rem 0.7rem;
+  }
+  .card {
+    flex: 1 1 140px;
+    min-width: 140px;
+    padding: 0.5rem 0.55rem;
+  }
+  .name {
+    font-size: 0.82rem;
+  }
+}
+
+/* Portrait tablets: two tappable cards per row. */
+@media (max-width: 600px) {
+  .card {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 0;
+  }
+  .statRow {
+    gap: 0.3rem;
+  }
+  .tooltip {
+    width: min(250px, 80vw);
+  }
+}

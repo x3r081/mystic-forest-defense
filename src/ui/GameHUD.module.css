@@ -1,0 +1,485 @@
+.hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.25rem;
+  font-family: var(--mff-font-display);
+  transition: box-shadow 0.2s ease;
+}
+
+.hudPaused {
+  box-shadow: inset 0 0 0 2px rgba(159, 217, 255, 0.35);
+}
+
+.hudPaused::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(3, 8, 6, 0.12);
+  z-index: 1;
+}
+
+/* Only interactive chrome captures clicks — modals manage their own hit areas. */
+.topBar,
+.bottomBar {
+  pointer-events: auto;
+  position: relative;
+  z-index: 2;
+}
+
+.topBar {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.resourceGroup {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 1rem;
+  border-radius: 14px;
+  background: rgba(13, 32, 24, 0.6);
+  border: 1px solid rgba(126, 249, 196, 0.18);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 6px currentColor);
+}
+
+.coinIcon {
+  color: var(--mff-ember);
+}
+
+.lifeIcon {
+  color: #ff7a9c;
+}
+
+.statText {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.statLabel {
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mff-text-muted);
+}
+
+.statValue {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--mff-text);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.levelBadge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem 1.2rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(91, 63, 174, 0.55), rgba(13, 32, 24, 0.6));
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), 0 0 24px rgba(167, 139, 250, 0.25);
+}
+
+.levelLabel {
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--mff-mist);
+}
+
+.levelValue {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--mff-text);
+}
+
+.levelTotal {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--mff-text-muted);
+}
+
+.levelBadgeBoss {
+  background: linear-gradient(135deg, rgba(255, 45, 77, 0.55), rgba(26, 3, 9, 0.7));
+  border-color: rgba(255, 90, 110, 0.6);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 28px rgba(255, 45, 77, 0.4);
+  animation: bossPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes bossPulse {
+  0%, 100% { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 24px rgba(255, 45, 77, 0.35); }
+  50% { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 40px rgba(255, 45, 77, 0.7); }
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.speedGroup {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 12px;
+  border: 1px solid rgba(159, 217, 255, 0.3);
+  background: rgba(13, 32, 24, 0.55);
+  backdrop-filter: blur(10px);
+}
+
+.speedButton {
+  min-width: 2.1rem;
+  height: 2rem;
+  padding: 0 0.4rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--mff-text-muted);
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.speedButton:hover {
+  color: var(--mff-text);
+  background: rgba(22, 58, 43, 0.7);
+}
+
+.speedButtonActive {
+  color: #06140d;
+  background: linear-gradient(135deg, #7ef9c4, #3fae6b);
+  box-shadow: 0 0 14px rgba(63, 174, 107, 0.5);
+}
+
+.speedButtonActive:hover {
+  color: #06140d;
+  background: linear-gradient(135deg, #7ef9c4, #3fae6b);
+}
+
+.phaseStatus {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mff-text-muted);
+  border-radius: 10px;
+  border: 1px solid rgba(159, 217, 255, 0.22);
+  background: rgba(13, 32, 24, 0.45);
+}
+
+.phaseStatusPaused {
+  color: #ffe8a8;
+  border-color: rgba(255, 232, 168, 0.45);
+  background: rgba(48, 36, 8, 0.55);
+  box-shadow: 0 0 12px rgba(255, 200, 80, 0.25);
+}
+
+.playPauseButton {
+  height: 2.6rem;
+  padding: 0 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--mff-text);
+  border-radius: 12px;
+  border: 1px solid rgba(159, 217, 255, 0.3);
+  background: rgba(13, 32, 24, 0.55);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.playPauseButton:hover {
+  background: rgba(22, 58, 43, 0.85);
+  border-color: rgba(126, 249, 196, 0.45);
+}
+
+.playPauseButtonActive {
+  color: #06140d;
+  border-color: rgba(126, 249, 196, 0.6);
+  background: linear-gradient(135deg, #7ef9c4, #3fae6b);
+  box-shadow: 0 0 14px rgba(63, 174, 107, 0.45);
+}
+
+.playPauseButtonActive:hover {
+  color: #06140d;
+  background: linear-gradient(135deg, #8fffd0, #4bc47a);
+}
+
+.iconButton {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  font-size: 0.85rem;
+  line-height: 1;
+  color: var(--mff-text);
+  border-radius: 12px;
+  border: 1px solid rgba(159, 217, 255, 0.3);
+  background: rgba(13, 32, 24, 0.55);
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: background 0.2s ease, transform 0.15s ease, border-color 0.2s ease;
+}
+
+.iconButton:hover {
+  background: rgba(22, 58, 43, 0.85);
+  border-color: rgba(159, 217, 255, 0.55);
+  transform: translateY(-1px);
+}
+
+.menuButton {
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mff-text);
+  padding: 0.6rem 1.2rem;
+  border-radius: 999px;
+  border: 1px solid rgba(159, 217, 255, 0.3);
+  background: rgba(13, 32, 24, 0.55);
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.menuButton:hover {
+  background: rgba(22, 58, 43, 0.85);
+  transform: translateY(-1px);
+}
+
+.bottomBar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.wavePanel {
+  width: min(560px, 80vw);
+  padding: 0.7rem 1.1rem;
+  border-radius: 16px;
+  background: rgba(13, 32, 24, 0.6);
+  border: 1px solid rgba(126, 249, 196, 0.18);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.waveHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.45rem;
+}
+
+.waveTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--mff-text);
+}
+
+.bossTag {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  color: #fff;
+  background: linear-gradient(120deg, #ff2d4d, #ff7a5a);
+  box-shadow: 0 0 14px rgba(255, 45, 77, 0.6);
+}
+
+.wavePanelBoss {
+  border-color: rgba(255, 90, 110, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 45, 77, 0.25);
+}
+
+.progressFillBoss {
+  background: linear-gradient(90deg, #ff2d4d, #ff9d4d);
+  box-shadow: 0 0 14px rgba(255, 45, 77, 0.7);
+}
+
+.waveCount {
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  color: var(--mff-text-muted);
+}
+
+.progressTrack {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  border: 1px solid rgba(126, 249, 196, 0.12);
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--mff-moss), var(--mff-glow));
+  box-shadow: 0 0 14px rgba(126, 249, 196, 0.6);
+  transition: width 0.3s ease;
+}
+
+.waveDots {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
+  justify-content: center;
+}
+
+.dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(126, 249, 196, 0.25);
+}
+
+.dotActive {
+  background: var(--mff-glow);
+  box-shadow: 0 0 10px var(--mff-glow);
+}
+
+.dotDone {
+  background: var(--mff-moss);
+}
+
+.bossBanner {
+  position: absolute;
+  top: 26%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  pointer-events: none;
+  text-align: center;
+  animation: bossBannerIn 4.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.bossBannerKicker {
+  font-size: 0.85rem;
+  letter-spacing: 0.45em;
+  text-transform: uppercase;
+  color: #ff9db0;
+  text-shadow: 0 0 14px rgba(255, 60, 90, 0.8);
+}
+
+.bossBannerTitle {
+  font-family: var(--mff-font-title);
+  font-size: clamp(2rem, 5vw, 3.6rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #fff;
+  text-shadow: 0 0 26px rgba(255, 45, 77, 0.9), 0 0 60px rgba(255, 45, 77, 0.55);
+}
+
+@keyframes bossBannerIn {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.7);
+    filter: blur(8px);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.05);
+    filter: blur(0);
+  }
+  22% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -52%) scale(1);
+  }
+}
+
+/* ---- Tablet / smaller-desktop tuning ---- */
+@media (max-width: 920px) {
+  .hud {
+    padding: 0.85rem;
+  }
+  .topBar {
+    gap: 0.5rem;
+  }
+  .stat {
+    padding: 0.45rem 0.7rem;
+    gap: 0.45rem;
+  }
+  .statValue {
+    font-size: 1.1rem;
+  }
+  .icon {
+    font-size: 1.05rem;
+  }
+  .levelBadge {
+    padding: 0.4rem 0.9rem;
+  }
+  .levelValue {
+    font-size: 1.25rem;
+  }
+  .iconButton {
+    width: 2.3rem;
+    height: 2.3rem;
+  }
+  .menuButton {
+    padding: 0.5rem 0.95rem;
+    font-size: 0.72rem;
+  }
+  .wavePanel {
+    width: min(560px, 94vw);
+  }
+}
+
+/* Narrow / portrait tablets: let the top bar wrap so nothing clips off-screen. */
+@media (max-width: 680px) {
+  .topBar {
+    flex-wrap: wrap;
+  }
+  .spacer {
+    display: none;
+  }
+  .controls {
+    margin-left: auto;
+  }
+  .statLabel {
+    font-size: 0.55rem;
+  }
+}

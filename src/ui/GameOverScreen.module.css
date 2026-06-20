@@ -1,0 +1,88 @@
+.root {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, rgba(10, 15, 26, 0.4) 0%, rgba(10, 15, 26, 0.85) 100%);
+  pointer-events: auto;
+}
+
+.panel {
+  text-align: center;
+  padding: 2.5rem 3rem;
+  border-radius: 22px;
+  background: rgba(13, 32, 24, 0.7);
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 60px rgba(167, 139, 250, 0.2);
+  animation: rise 0.5s ease-out both;
+}
+
+.title {
+  font-family: var(--mff-font-title);
+  font-size: clamp(2rem, 6vw, 3.2rem);
+  margin: 0 0 0.5rem;
+  color: var(--mff-text);
+  text-shadow: 0 0 30px rgba(167, 139, 250, 0.5);
+}
+
+.subtitle {
+  color: var(--mff-text-muted);
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+}
+
+.panelWide {
+  width: min(520px, 92vw);
+  text-align: center;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.primary,
+.secondary {
+  font-family: var(--mff-font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.85rem 2rem;
+  border-radius: 999px;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.15s ease, box-shadow 0.25s ease;
+}
+
+.primary {
+  color: var(--mff-night);
+  background: linear-gradient(120deg, var(--mff-glow), var(--mff-moss));
+  box-shadow: 0 10px 30px rgba(63, 174, 107, 0.4);
+}
+
+.secondary {
+  color: var(--mff-text);
+  background: rgba(13, 32, 24, 0.6);
+  border: 1px solid rgba(159, 217, 255, 0.3);
+}
+
+.primary:hover,
+.secondary:hover {
+  transform: translateY(-2px);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

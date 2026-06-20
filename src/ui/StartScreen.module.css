@@ -1,0 +1,229 @@
+.root {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  text-align: center;
+  padding: 2rem;
+  /* Let the 3D forest behind show through, with a subtle vignette */
+  background: radial-gradient(
+    ellipse at center,
+    rgba(10, 15, 26, 0) 30%,
+    rgba(10, 15, 26, 0.55) 100%
+  );
+  pointer-events: none;
+}
+
+.root > * {
+  pointer-events: auto;
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  animation: rise 1s ease-out both;
+}
+
+.kicker {
+  font-size: 0.95rem;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: var(--mff-mist);
+  opacity: 0.85;
+  margin: 0;
+}
+
+.title {
+  font-family: var(--mff-font-title);
+  font-size: clamp(2.8rem, 9vw, 6rem);
+  line-height: 1;
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--mff-text);
+  text-shadow:
+    0 0 24px rgba(126, 249, 196, 0.45),
+    0 0 60px rgba(167, 139, 250, 0.35);
+}
+
+.title .accent {
+  background: linear-gradient(120deg, var(--mff-glow), var(--mff-arcane));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.tagline {
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  color: var(--mff-text-muted);
+  margin: 0.5rem auto 0;
+  max-width: 32ch;
+}
+
+.playButton {
+  position: relative;
+  font-family: var(--mff-font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mff-night);
+  padding: 1rem 3.5rem;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  background: linear-gradient(120deg, var(--mff-glow), var(--mff-moss));
+  box-shadow:
+    0 0 0 1px rgba(126, 249, 196, 0.4),
+    0 10px 30px rgba(63, 174, 107, 0.35),
+    0 0 40px rgba(126, 249, 196, 0.3);
+  transition: transform 0.15s ease, box-shadow 0.25s ease;
+  animation: rise 1s ease-out 0.15s both, pulse 3s ease-in-out 1s infinite;
+}
+
+.playButton:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow:
+    0 0 0 1px rgba(126, 249, 196, 0.7),
+    0 14px 40px rgba(63, 174, 107, 0.5),
+    0 0 60px rgba(126, 249, 196, 0.5);
+}
+
+.playButton:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.scoresButton {
+  font-family: var(--mff-font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mff-text);
+  padding: 0.75rem 2rem;
+  border-radius: 999px;
+  cursor: pointer;
+  background: rgba(13, 32, 24, 0.55);
+  border: 1px solid rgba(159, 217, 255, 0.35);
+  backdrop-filter: blur(8px);
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.2s ease;
+  animation: rise 1s ease-out 0.2s both;
+}
+
+.scoresButton:hover {
+  transform: translateY(-2px);
+  border-color: rgba(126, 249, 196, 0.5);
+  box-shadow: 0 0 20px rgba(126, 249, 196, 0.2);
+}
+
+.hint {
+  font-size: 0.85rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mff-text-muted);
+  opacity: 0.7;
+  animation: rise 1s ease-out 0.3s both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(126, 249, 196, 0.4),
+      0 10px 30px rgba(63, 174, 107, 0.35),
+      0 0 40px rgba(126, 249, 196, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(126, 249, 196, 0.6),
+      0 10px 36px rgba(63, 174, 107, 0.5),
+      0 0 64px rgba(126, 249, 196, 0.5);
+  }
+}
+
+.difficultyGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  width: min(720px, 100%);
+  animation: rise 1s ease-out 0.1s both;
+}
+
+.difficultyCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.25rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(126, 249, 196, 0.25);
+  background: rgba(13, 32, 24, 0.55);
+  color: var(--mff-text);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+
+.difficultyCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(126, 249, 196, 0.5);
+}
+
+.difficultyCardActive {
+  border-color: rgba(126, 249, 196, 0.75);
+  box-shadow: 0 0 24px rgba(126, 249, 196, 0.25);
+}
+
+.difficultyLabel {
+  font-family: var(--mff-font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.difficultyDesc {
+  font-size: 0.85rem;
+  color: var(--mff-text-muted);
+  line-height: 1.4;
+}
+
+.difficultyStats {
+  font-size: 0.8rem;
+  color: var(--mff-mist);
+  margin-top: 0.25rem;
+}
+
+.difficultyActions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  animation: rise 1s ease-out 0.2s both;
+}
+
+.ghostLink {
+  background: none;
+  border: none;
+  color: var(--mff-text-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ghostLink:hover {
+  color: var(--mff-glow);
+}

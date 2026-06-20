@@ -1,0 +1,18 @@
+.perf-overlay {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 9999;
+  font: 11px/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #b8ffd8;
+  background: rgba(4, 10, 8, 0.72);
+  border: 1px solid rgba(126, 249, 196, 0.25);
+  border-radius: 6px;
+  padding: 6px 8px;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+}
+
+.perf-overlay div {
+  opacity: 0.92;
+}

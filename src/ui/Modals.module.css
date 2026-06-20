@@ -1,0 +1,289 @@
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  pointer-events: auto;
+  background: radial-gradient(ellipse at center, rgba(5, 12, 9, 0.55), rgba(3, 7, 5, 0.82));
+  backdrop-filter: blur(6px);
+  animation: overlayIn 0.25s ease both;
+}
+
+.overlayBoss {
+  background: radial-gradient(ellipse at center, rgba(40, 4, 12, 0.55), rgba(10, 2, 5, 0.88));
+}
+
+/*
+ * Non-blocking pre-run overlay: the wrapper ignores pointer events so the
+ * player can place towers on the battlefield behind it, while the card itself
+ * re-enables them. Anchored toward the top so it never covers the tower shop.
+ */
+.prepareOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 35;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 5.5rem 1.5rem 1.5rem;
+  pointer-events: none;
+}
+
+.prepareOverlay.overlayBoss {
+  background: none;
+  backdrop-filter: none;
+}
+
+.prepareCard {
+  pointer-events: auto;
+  width: min(420px, 92vw);
+}
+
+.objective {
+  margin: 1.1rem auto 0;
+  max-width: 36ch;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--mff-text-muted);
+  font-style: italic;
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.panel {
+  position: relative;
+  width: min(440px, 92vw);
+  padding: 2rem 1.9rem;
+  text-align: center;
+  border-radius: 22px;
+  background: linear-gradient(165deg, rgba(16, 38, 28, 0.92), rgba(8, 18, 13, 0.94));
+  border: 1px solid rgba(126, 249, 196, 0.28);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.6),
+    0 0 50px rgba(63, 174, 107, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  animation: panelIn 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+@keyframes panelIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.panelBoss {
+  border-color: rgba(255, 90, 110, 0.5);
+  background: linear-gradient(165deg, rgba(46, 8, 16, 0.94), rgba(18, 3, 7, 0.96));
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.7),
+    0 0 60px rgba(255, 45, 77, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  animation: panelIn 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.2) both, bossThrob 2.4s ease-in-out 0.4s infinite;
+}
+
+@keyframes bossThrob {
+  0%, 100% { box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 50px rgba(255, 45, 77, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06); }
+  50% { box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 80px rgba(255, 45, 77, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06); }
+}
+
+.kicker {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--mff-glow);
+}
+
+.kickerDim {
+  color: var(--mff-text-muted);
+  letter-spacing: 0.1em;
+}
+
+.kickerBoss {
+  color: #ff7a90;
+  animation: bossFlash 1.2s ease-in-out infinite;
+}
+
+@keyframes bossFlash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+.title {
+  margin: 0.5rem 0 0;
+  font-family: var(--mff-font-title);
+  font-size: 1.8rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--mff-text);
+  text-shadow: 0 0 24px rgba(126, 249, 196, 0.35);
+}
+
+.titleBoss {
+  color: #ffe1e6;
+  text-shadow: 0 0 28px rgba(255, 45, 77, 0.6);
+}
+
+.flavor {
+  margin: 0.85rem auto 0;
+  max-width: 34ch;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--mff-text-muted);
+}
+
+.metaGrid {
+  display: flex;
+  gap: 0.7rem;
+  margin-top: 1.3rem;
+}
+
+.metaCell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.7rem 0.5rem;
+  border-radius: 13px;
+  background: rgba(0, 0, 0, 0.32);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.metaLabel {
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mff-text-muted);
+}
+
+.metaValue {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--mff-text);
+}
+
+.roster {
+  margin-top: 1.2rem;
+}
+
+.rosterLabel {
+  display: block;
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mff-text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.rosterChips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.rosterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  color: var(--mff-text);
+  background: color-mix(in srgb, var(--chip) 16%, rgba(0, 0, 0, 0.4));
+  border: 1px solid color-mix(in srgb, var(--chip) 50%, transparent);
+}
+
+.rosterDot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: var(--chip);
+  box-shadow: 0 0 8px var(--chip);
+}
+
+.primaryButton {
+  margin-top: 1.6rem;
+  width: 100%;
+  padding: 0.85rem 1.5rem;
+  font-family: var(--mff-font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #06140d;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #7ef9c4, #3fae6b);
+  box-shadow: 0 8px 24px rgba(63, 174, 107, 0.45), 0 0 0 1px rgba(126, 249, 196, 0.4) inset;
+  transition: transform 0.14s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.primaryButton:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: 0 12px 30px rgba(63, 174, 107, 0.6);
+}
+
+.primaryButtonBoss {
+  color: #fff;
+  background: linear-gradient(135deg, #ff5a6e, #b1213a);
+  box-shadow: 0 8px 24px rgba(255, 45, 77, 0.5), 0 0 0 1px rgba(255, 122, 144, 0.5) inset;
+}
+
+.primaryButtonBoss:hover {
+  box-shadow: 0 12px 32px rgba(255, 45, 77, 0.7);
+}
+
+.buttonStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 1.6rem;
+}
+
+.buttonStack .primaryButton {
+  margin-top: 0;
+}
+
+.secondaryButton,
+.ghostButton {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  font-family: var(--mff-font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  border-radius: 14px;
+  transition: transform 0.14s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.secondaryButton {
+  color: var(--mff-text);
+  background: rgba(13, 32, 24, 0.7);
+  border: 1px solid rgba(159, 217, 255, 0.3);
+}
+
+.secondaryButton:hover {
+  transform: translateY(-1px);
+  background: rgba(22, 58, 43, 0.9);
+  border-color: rgba(159, 217, 255, 0.55);
+}
+
+.ghostButton {
+  color: var(--mff-text-muted);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.ghostButton:hover {
+  color: var(--mff-text);
+  border-color: rgba(255, 255, 255, 0.3);
+}
