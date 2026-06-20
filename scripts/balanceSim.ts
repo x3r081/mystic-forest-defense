@@ -1,19 +1,25 @@
 /**
- * Headless balance simulation.
+ * Headless balance simulation for the 500-level campaign.
  *
- * Mirrors the in-game combat loop (spawning, targeting, projectiles, splash,
- * slow, DoT, armor, leaks) using the REAL path geometry, build spots and data
- * files so we can tune numbers against faithful outcomes instead of guesswork.
+ * Mirrors combat (spawning, targeting, projectiles, splash, slow, DoT, armor, leaks)
+ * using real path geometry and data files. Simulates upgrades (normal L5, hybrid L3),
+ * merges, mini-bosses, and map bosses across Easy / Medium / Hard.
  *
- * Run with:  npx tsx scripts/balanceSim.ts
+ * Run: npx tsx scripts/balanceSim.ts
  */
 import * as THREE from 'three';
-import { gameConfig, towers, enemyTypes, type EnemyKind, type TowerDef } from '../src/data/gameConfig';
-import { getLevel, TOTAL_LEVELS } from '../src/data/levels';
-import { getMapForLevel } from '../src/data/maps';
-import { towerUpgradeConfig } from '../src/data/towerUpgradeConfig';
+import { towers, enemyTypes, type EnemyKind, type TowerDef } from '../src/data/gameConfig';
+import { TOTAL_LEVELS } from '../src/data/levels';
+import { getMapForLevel, getLevelInMap, getMapIndex } from '../src/data/maps';
+import { getEffectiveLevel } from '../src/data/levelUtils';
+import { difficulties, type DifficultyId } from '../src/data/difficulties';
+import { getMapTransitionBonus, isMapTransition } from '../src/data/campaignConfig';
+import { getUpgradeCost, NORMAL_MAX_LEVEL, MERGE_DISTANCE } from '../src/data/towerUpgradeConfig';
+import { getTowerDef } from '../src/data/towerRegistry';
+import { getEffectiveTowerStats } from '../src/data/towerStats';
+import { getMergeRecipe, MERGE_MIN_LEVEL } from '../src/data/hybridTowers';
+import { estimateTowerDps } from './balanceMetrics';
 
-// Path geometry follows the active map for each simulated level.
 function pathCurveForLevel(level: number): THREE.CatmullRomCurve3 {
   const points = getMapForLevel(level).pathPoints;
   return new THREE.CatmullRomCurve3(
@@ -31,8 +37,9 @@ interface BuildSpot {
   x: number;
   z: number;
 }
+
 function generateBuildSpots(): BuildSpot[] {
-  const offsets = [towerUpgradeConfig.mergeDistance, towerUpgradeConfig.mergeDistance + 1.9];
+  const offsets = [MERGE_DISTANCE, MERGE_DISTANCE + 1.9];
   const minSpacing = 2.2;
   const minPathDist = 1.9;
   const samples = pathCurve.getSpacedPoints(80);
@@ -67,10 +74,10 @@ function generateBuildSpots(): BuildSpot[] {
   }
   return chosen.map((c, i) => ({ id: `spot-${i}`, x: c.x, z: c.z }));
 }
-const BUILD_SPOTS = generateBuildSpots();
 
-// Precompute uniform arc-length samples for coverage scoring.
+const BUILD_SPOTS = generateBuildSpots();
 const COV_SAMPLES = pathCurve.getSpacedPoints(240);
+
 function coverageFraction(x: number, z: number, range: number): number {
   const r2 = range * range;
   let n = 0;
@@ -80,9 +87,6 @@ function coverageFraction(x: number, z: number, range: number): number {
   return n / COV_SAMPLES.length;
 }
 
-// ----------------------------------------------------------------------------
-// Seeded RNG (deterministic runs).
-// ----------------------------------------------------------------------------
 function mulberry32(seed: number) {
   return () => {
     seed |= 0;
@@ -93,9 +97,6 @@ function mulberry32(seed: number) {
   };
 }
 
-// ----------------------------------------------------------------------------
-// Simulation types
-// ----------------------------------------------------------------------------
 interface SimEnemy {
   id: number;
   progress: number;
@@ -113,6 +114,7 @@ interface SimEnemy {
   radius: number;
   alive: boolean;
 }
+
 interface SimProjectile {
   x: number;
   z: number;
@@ -123,14 +125,17 @@ interface SimProjectile {
   slow?: { factor: number; duration: number };
   dot?: { dps: number; duration: number };
   life: number;
-  /** Last known target position, for area bursts after the target is gone. */
   lastX: number;
   lastZ: number;
 }
-interface PlacedTower {
-  def: TowerDef;
+
+interface SimTower {
+  uid: number;
+  towerId: string;
   x: number;
   z: number;
+  level: number;
+  invested: number;
   cd: number;
 }
 
@@ -144,8 +149,8 @@ interface EnemySpec {
   isBoss: boolean;
 }
 
-function buildSpawnQueue(level: number): EnemySpec[] {
-  const def = getLevel(level);
+function buildSpawnQueue(level: number, diffId: DifficultyId): EnemySpec[] {
+  const def = getEffectiveLevel(level, difficulties[diffId]);
   const queue: EnemySpec[] = [];
   for (let i = 0; i < def.enemyCount; i++) {
     const kind = def.enemyKinds[i % def.enemyKinds.length];
@@ -160,9 +165,8 @@ function buildSpawnQueue(level: number): EnemySpec[] {
       isBoss: false,
     });
   }
-  if (def.boss) {
-    const boss = def.boss;
-    queue.splice(Math.floor(queue.length / 3), 0, {
+  const insertBoss = (boss: NonNullable<typeof def.boss>, at: number) => {
+    queue.splice(at, 0, {
       kind: 'corruptor',
       maxHp: boss.health,
       speed: boss.speed,
@@ -171,22 +175,22 @@ function buildSpawnQueue(level: number): EnemySpec[] {
       radius: boss.radius,
       isBoss: true,
     });
-  }
+  };
+  if (def.boss) insertBoss(def.boss, Math.floor(queue.length / 3));
+  else if (def.miniBoss) insertBoss(def.miniBoss, Math.floor(queue.length / 2));
   return queue;
 }
 
 const DT = 1 / 30;
 
-interface LevelResult {
-  leaked: number;
-  killed: number;
-  coinsEarned: number;
-  durationSec: number;
+function towerCombatStats(t: SimTower) {
+  const def = getTowerDef(t.towerId)!;
+  return getEffectiveTowerStats(def, t.level);
 }
 
-function simulateLevel(level: number, placed: PlacedTower[], rng: () => number): LevelResult {
-  const queue = buildSpawnQueue(level);
-  const def = getLevel(level);
+function simulateLevel(level: number, placed: SimTower[], diffId: DifficultyId, rng: () => number) {
+  const queue = buildSpawnQueue(level, diffId);
+  const def = getEffectiveLevel(level, difficulties[diffId]);
   const spawnRate = def.spawnRate;
   const curve = pathCurveForLevel(level);
 
@@ -200,7 +204,7 @@ function simulateLevel(level: number, placed: PlacedTower[], rng: () => number):
   let killed = 0;
   let coinsEarned = 0;
 
-  for (const t of placed) t.cd = rng() * t.def.cooldown;
+  for (const t of placed) t.cd = rng() * towerCombatStats(t).cooldown;
 
   const tmp = new THREE.Vector3();
   const setPos = (e: SimEnemy) => {
@@ -248,7 +252,6 @@ function simulateLevel(level: number, placed: PlacedTower[], rng: () => number):
 
   let guard = 0;
   while (guard++ < 100000) {
-    // Spawn
     if (spawnIndex < queue.length) {
       spawnTimer += DT;
       if (spawnTimer >= spawnRate) {
@@ -276,7 +279,6 @@ function simulateLevel(level: number, placed: PlacedTower[], rng: () => number):
       }
     }
 
-    // Enemy DoT, death, movement
     for (const e of enemies) {
       if (!e.alive) continue;
       if (e.dots.length) {
@@ -301,29 +303,28 @@ function simulateLevel(level: number, placed: PlacedTower[], rng: () => number):
       setPos(e);
     }
 
-    // Towers fire
     for (const t of placed) {
+      const stats = towerCombatStats(t);
       t.cd -= DT;
       if (t.cd > 0) continue;
-      const target = findTarget(t.x, t.z, t.def.range);
+      const target = findTarget(t.x, t.z, stats.range);
       if (!target) continue;
-      t.cd = t.def.cooldown;
+      t.cd = stats.cooldown;
       projectiles.push({
         x: t.x,
         z: t.z,
         targetId: target.id,
-        damage: t.def.damage,
-        speed: t.def.projectileSpeed,
-        splashRadius: t.def.splashRadius,
-        slow: t.def.slow,
-        dot: t.def.dot,
+        damage: stats.damage,
+        speed: stats.projectileSpeed,
+        splashRadius: stats.splashRadius,
+        slow: stats.slow,
+        dot: stats.dot,
         life: 0,
         lastX: target.x,
         lastZ: target.z,
       });
     }
 
-    // Projectiles
     for (const proj of projectiles) {
       proj.life += DT;
       if (proj.life > 4) {
@@ -332,7 +333,6 @@ function simulateLevel(level: number, placed: PlacedTower[], rng: () => number):
       }
       const target = enemies.find((e) => e.id === proj.targetId);
       if (!target || !target.alive) {
-        // Target gone: area shells still burst on the last seen spot.
         if (proj.splashRadius) applyHit(proj, proj.lastX, proj.lastZ);
         proj.targetId = -1;
         continue;
@@ -352,7 +352,6 @@ function simulateLevel(level: number, placed: PlacedTower[], rng: () => number):
       proj.z += (dz / dist) * step;
     }
 
-    // Cleanup
     for (let i = projectiles.length - 1; i >= 0; i--) if (projectiles[i].targetId === -1) projectiles.splice(i, 1);
     for (let i = enemies.length - 1; i >= 0; i--) if (!enemies[i].alive) enemies.splice(i, 1);
 
@@ -363,28 +362,9 @@ function simulateLevel(level: number, placed: PlacedTower[], rng: () => number):
   return { leaked, killed, coinsEarned, durationSec: elapsed };
 }
 
-// ----------------------------------------------------------------------------
-// Player model: buy toward a sensible cumulative tower plan, persisting towers
-// across levels and placing each at the best open spot (by path coverage).
-// Represents a competent-but-not-perfect human, not an optimizer.
-// ----------------------------------------------------------------------------
-type Plan = Partial<Record<string, number>>;
-const BUILD_PLAN: Plan[] = [
-  { 'moon-archer': 3 },
-  { 'moon-archer': 4, 'thorn-spire': 1 },
-  { 'moon-archer': 4, 'thorn-spire': 1, 'crystal-cannon': 1 },
-  { 'moon-archer': 5, 'thorn-spire': 1, 'crystal-cannon': 1, 'firefly-shrine': 1 },
-  { 'moon-archer': 5, 'thorn-spire': 2, 'crystal-cannon': 2, 'firefly-shrine': 1 },
-  { 'moon-archer': 5, 'thorn-spire': 2, 'crystal-cannon': 2, 'firefly-shrine': 1, 'oak-guardian': 1 },
-  { 'moon-archer': 6, 'thorn-spire': 2, 'crystal-cannon': 3, 'firefly-shrine': 2, 'oak-guardian': 1 },
-  { 'moon-archer': 6, 'thorn-spire': 3, 'crystal-cannon': 3, 'firefly-shrine': 2, 'oak-guardian': 2 },
-  { 'moon-archer': 7, 'thorn-spire': 3, 'crystal-cannon': 3, 'firefly-shrine': 2, 'oak-guardian': 3 },
-  { 'moon-archer': 7, 'thorn-spire': 3, 'crystal-cannon': 4, 'firefly-shrine': 2, 'oak-guardian': 3 },
-];
-
 function towerById(id: string): TowerDef {
-  const t = towers.find((x) => x.id === id);
-  if (!t) throw new Error(`no tower ${id}`);
+  const t = getTowerDef(id);
+  if (!t || 'isHybrid' in t) throw new Error(`no base tower ${id}`);
   return t;
 }
 
@@ -402,211 +382,225 @@ function bestOpenSpot(usedIds: Set<string>, range: number): BuildSpot | null {
   return best;
 }
 
-/**
- * A casual player: glances at the field and picks an okay-but-not-optimal spot
- * for the tower's range (best of a few random candidates), rather than the
- * globally best spot a min-maxer would compute.
- */
-function randomOpenSpot(usedIds: Set<string>, rng: () => number, range: number): BuildSpot | null {
-  const open = BUILD_SPOTS.filter((s) => !usedIds.has(s.id));
-  if (!open.length) return null;
-  let best: BuildSpot | null = null;
-  let bestCov = -1;
-  for (let k = 0; k < 3; k++) {
-    const cand = open[Math.floor(rng() * open.length)];
-    const cov = coverageFraction(cand.x, cand.z, range);
-    if (cov > bestCov) {
-      bestCov = cov;
-      best = cand;
-    }
-  }
-  return best;
+function targetCounts(level: number): Record<string, number> {
+  const levelInMap = getLevelInMap(level);
+  const mapIndex = getMapIndex(level);
+  const growth = Math.floor(levelInMap / 12) + mapIndex;
+  return {
+    'moon-archer': Math.min(7, 3 + growth),
+    'thorn-spire': Math.min(3, 1 + Math.floor(levelInMap / 18) + Math.floor(mapIndex / 2)),
+    'crystal-cannon': Math.min(3, Math.floor(levelInMap / 22) + Math.floor(mapIndex / 2)),
+    'firefly-shrine': Math.min(2, Math.floor(levelInMap / 28) + Math.floor(mapIndex / 3)),
+    'oak-guardian': Math.min(2, Math.floor(levelInMap / 35) + Math.floor(mapIndex / 4)),
+  };
 }
 
-function runFullGame(opts: { reserveFrac?: number; verbose?: boolean; seed?: number; placement?: 'best' | 'random' } = {}) {
-  const { reserveFrac = 0, verbose = true, seed = 12345, placement = 'best' } = opts;
+function targetTowerLevel(level: number, towerId: string): number {
+  const levelInMap = getLevelInMap(level);
+  const def = getTowerDef(towerId);
+  const isHybrid = def != null && 'isHybrid' in def && def.isHybrid;
+  const max = isHybrid ? 3 : NORMAL_MAX_LEVEL;
+  if (levelInMap >= 45) return max;
+  if (levelInMap >= 30) return Math.min(max, isHybrid ? 3 : 4);
+  if (levelInMap >= 18) return Math.min(max, isHybrid ? 2 : 3);
+  if (levelInMap >= 8) return 2;
+  return 1;
+}
+
+let nextTowerUid = 1;
+
+function tryBuyTowardPlan(
+  coins: number,
+  placed: SimTower[],
+  usedSpots: Set<string>,
+  counts: Record<string, number>,
+  level: number,
+): { coins: number; spent: number } {
+  let spent = 0;
+  const plan = targetCounts(level);
+  let progress = true;
+  while (progress) {
+    progress = false;
+    const wishlist = Object.keys(plan)
+      .filter((id) => (counts[id] ?? 0) < (plan[id] ?? 0))
+      .map(towerById)
+      .sort((a, b) => a.cost - b.cost);
+    for (const def of wishlist) {
+      if (coins < def.cost) continue;
+      const spot = bestOpenSpot(usedSpots, def.range);
+      if (!spot) continue;
+      usedSpots.add(spot.id);
+      placed.push({
+        uid: nextTowerUid++,
+        towerId: def.id,
+        x: spot.x,
+        z: spot.z,
+        level: 1,
+        invested: def.cost,
+        cd: 0,
+      });
+      counts[def.id] = (counts[def.id] ?? 0) + 1;
+      coins -= def.cost;
+      spent += def.cost;
+      progress = true;
+      break;
+    }
+  }
+  return { coins, spent };
+}
+
+function tryUpgrades(level: number, coins: number, placed: SimTower[]): { coins: number; spent: number } {
+  let spent = 0;
+  let progress = true;
+  while (progress) {
+    progress = false;
+    const candidates = placed
+      .map((t) => ({
+        t,
+        target: targetTowerLevel(level, t.towerId),
+        cost: getUpgradeCost(t.towerId, t.level),
+      }))
+      .filter((c) => c.t.level < c.target && Number.isFinite(c.cost) && coins >= c.cost)
+      .sort((a, b) => a.cost - b.cost);
+    for (const c of candidates) {
+      coins -= c.cost;
+      spent += c.cost;
+      c.t.level++;
+      c.t.invested += c.cost;
+      progress = true;
+      break;
+    }
+  }
+  return { coins, spent };
+}
+
+function tryMerge(level: number, coins: number, placed: SimTower[], counts: Record<string, number>): { coins: number; spent: number } {
+  const levelInMap = getLevelInMap(level);
+  if (levelInMap < 25) return { coins, spent: 0 };
+  let spent = 0;
+  for (let i = 0; i < placed.length; i++) {
+    for (let j = i + 1; j < placed.length; j++) {
+      const a = placed[i];
+      const b = placed[j];
+      if (a.level < MERGE_MIN_LEVEL || b.level < MERGE_MIN_LEVEL) continue;
+      const recipe = getMergeRecipe(a.towerId, b.towerId);
+      if (!recipe) continue;
+      if (coins < recipe.mergeCost) continue;
+      const spot = { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 };
+      coins -= recipe.mergeCost;
+      spent += recipe.mergeCost;
+      const invested = a.invested + b.invested + recipe.mergeCost;
+      const hybrid = {
+        uid: nextTowerUid++,
+        towerId: recipe.hybridId,
+        x: spot.x,
+        z: spot.z,
+        level: Math.min(a.level, b.level),
+        invested,
+        cd: 0,
+      };
+      placed.splice(j, 1);
+      placed.splice(i, 1);
+      placed.push(hybrid);
+      counts[a.towerId] = (counts[a.towerId] ?? 1) - 1;
+      counts[b.towerId] = (counts[b.towerId] ?? 1) - 1;
+      counts[recipe.hybridId] = (counts[recipe.hybridId] ?? 0) + 1;
+      return { coins, spent };
+    }
+  }
+  return { coins, spent };
+}
+
+interface RunResult {
+  diffId: DifficultyId;
+  lives: number;
+  lastLevel: number;
+  won: boolean;
+  totalLeaked: number;
+  failReason?: string;
+}
+
+function runCampaign(diffId: DifficultyId, opts: { verbose?: boolean; seed?: number } = {}): RunResult {
+  const { verbose = false, seed = 42 } = opts;
+  const diff = difficulties[diffId];
   const rng = mulberry32(seed);
-  let coins = gameConfig.startingCoins;
-  let lives = gameConfig.startingLives;
-  const placed: PlacedTower[] = [];
-  const counts: Record<string, number> = {};
+  let coins = diff.startingCoins;
+  let lives = diff.startingLives;
+  const placed: SimTower[] = [];
   const usedSpots = new Set<string>();
-
-  const rows: string[] = [];
-  rows.push(
-    ['Lv', 'name', 'spent', 'coins0', 'earned', 'coins1', 'towers', 'leak', 'kill', 'lives', 'dur'].join('\t'),
-  );
-
+  const counts: Record<string, number> = {};
   let totalLeaked = 0;
+  let lastLevel = 0;
+
   for (let level = 1; level <= TOTAL_LEVELS; level++) {
-    const coinsAtStart = coins;
-    const plan = BUILD_PLAN[level - 1];
-    // Buy toward the plan (greedy: cheapest unmet first so early money is used well).
-    let spent = 0;
-    let progress = true;
-    while (progress) {
-      progress = false;
-      const wishlist = Object.keys(plan)
-        .filter((id) => (counts[id] ?? 0) < (plan[id] ?? 0))
-        .map(towerById)
-        .sort((a, b) => b.cost - a.cost);
-      for (const def of wishlist) {
-        const reserve = Math.floor(coins * reserveFrac);
-        if (coins - def.cost < reserve) continue;
-        const spot = placement === 'random' ? randomOpenSpot(usedSpots, rng, def.range) : bestOpenSpot(usedSpots, def.range);
-        if (!spot) continue;
-        usedSpots.add(spot.id);
-        placed.push({ def, x: spot.x, z: spot.z, cd: 0 });
-        counts[def.id] = (counts[def.id] ?? 0) + 1;
-        coins -= def.cost;
-        spent += def.cost;
-        progress = true;
-        break;
-      }
+    lastLevel = level;
+    if (isMapTransition(level - 1)) {
+      coins += getMapTransitionBonus(diff, level);
     }
 
-    const res = simulateLevel(level, placed, rng);
+    const buy = tryBuyTowardPlan(coins, placed, usedSpots, counts, level);
+    coins = buy.coins;
+    const up = tryUpgrades(level, coins, placed);
+    coins = up.coins;
+    const merge = tryMerge(level, coins, placed, counts);
+    coins = merge.coins;
+
+    const res = simulateLevel(level, placed, diffId, rng);
     coins += res.coinsEarned;
     lives -= res.leaked;
     totalLeaked += res.leaked;
 
-    const towerSummary = towers
-      .map((t) => `${t.icon}${counts[t.id] ?? 0}`)
-      .join(' ');
-    rows.push(
-      [
-        level,
-        getLevel(level).name.slice(0, 16),
-        spent,
-        coinsAtStart,
-        res.coinsEarned,
-        coins,
-        towerSummary,
-        res.leaked,
-        res.killed,
-        lives,
-        res.durationSec.toFixed(0),
-      ].join('\t'),
-    );
+    if (verbose && (level <= 15 || level % 10 === 0 || level === TOTAL_LEVELS)) {
+      const dps = placed.reduce((s, t) => s + estimateTowerDps(t.towerId, t.level), 0);
+      console.log(
+        `  L${String(level).padStart(3)} ${getEffectiveLevel(level, diff).name.slice(0, 28).padEnd(28)} leak=${res.leaked} lives=${lives} coins=${coins} towers=${placed.length} dps≈${dps.toFixed(0)}`,
+      );
+    }
 
     if (lives <= 0) {
-      rows.push(`>>> GAME OVER at level ${level} (lives ${lives})`);
-      break;
+      return { diffId, lives, lastLevel: level, won: false, totalLeaked, failReason: `died at level ${level}` };
     }
   }
 
-  if (verbose) {
-    console.log(rows.join('\n'));
-    console.log(`\nFinal: lives=${lives}, totalLeaked=${totalLeaked}, towersPlaced=${placed.length}/${BUILD_SPOTS.length} spots`);
-  }
-  return { lives, totalLeaked, won: lives > 0 };
+  return { diffId, lives, lastLevel, won: true, totalLeaked };
 }
 
-/**
- * Spam a single tower type: each level buy as many as affordable (best spots),
- * persist across levels, then fight. Used to check no single tower wins alone
- * (over-powered) and that premium towers still have reach.
- */
-function runSingleType(towerId: string, seed = 999) {
-  const rng = mulberry32(seed);
-  const def = towerById(towerId);
-  let coins = gameConfig.startingCoins;
-  let lives = gameConfig.startingLives;
-  const placed: PlacedTower[] = [];
-  const usedSpots = new Set<string>();
-  for (let level = 1; level <= TOTAL_LEVELS; level++) {
-    while (coins >= def.cost) {
-      const spot = bestOpenSpot(usedSpots, def.range);
-      if (!spot) break;
-      usedSpots.add(spot.id);
-      placed.push({ def, x: spot.x, z: spot.z, cd: 0 });
-      coins -= def.cost;
-    }
-    const res = simulateLevel(level, placed, rng);
-    coins += res.coinsEarned;
-    lives -= res.leaked;
-    if (lives <= 0) return { towerId, won: false, lives, lastLevel: level, towers: placed.length };
-  }
-  return { towerId, won: true, lives, lastLevel: TOTAL_LEVELS, towers: placed.length };
-}
-
-/** Run the standard plan but with one tower type removed, to expose dead weight. */
-function runLeaveOneOut(dropId: string) {
-  const saved = BUILD_PLAN.map((p) => ({ ...p }));
-  for (const p of BUILD_PLAN) delete p[dropId];
-  const r = runFullGame({ reserveFrac: 0, placement: 'best', verbose: false });
-  // restore
-  for (let i = 0; i < BUILD_PLAN.length; i++) BUILD_PLAN[i] = saved[i];
-  return r;
-}
-
-// ----------------------------------------------------------------------------
-// Tower role metrics
-// ----------------------------------------------------------------------------
 function printTowerMetrics() {
-  console.log('\n=== Tower metrics ===');
-  console.log(['tower', 'cost', 'dps', 'dps/coin', 'range', 'cov%', 'dps/spot', 'special'].join('\t'));
-  // Average coverage of the best ~6 spots for this range = typical mid-game placement quality.
+  console.log('\n=== Tower metrics (base L1) ===');
+  console.log(['tower', 'cost', 'dps', 'range', 'cov%'].join('\t'));
   for (const t of towers) {
     const covs = BUILD_SPOTS.map((s) => coverageFraction(s.x, s.z, t.range)).sort((a, b) => b - a);
     const topCov = covs.slice(0, 6).reduce((a, b) => a + b, 0) / 6;
-    const dps = t.damage / t.cooldown;
-    let special = '';
-    if (t.splashRadius) special = `splash r${t.splashRadius}`;
-    else if (t.slow) special = `slow ${t.slow.factor}x/${t.slow.duration}s`;
-    else if (t.dot) special = `dot ${t.dot.dps}/s x${t.dot.duration}s`;
-    console.log(
-      [
-        t.name.slice(0, 14),
-        t.cost,
-        dps.toFixed(1),
-        (dps / t.cost).toFixed(3),
-        t.range,
-        (topCov * 100).toFixed(0),
-        dps.toFixed(1),
-        special,
-      ].join('\t'),
-    );
+    console.log([t.name.slice(0, 14), t.cost, (t.damage / t.cooldown).toFixed(1), t.range, (topCov * 100).toFixed(0)].join('\t'));
   }
 }
 
-// ----------------------------------------------------------------------------
 function main() {
-  console.log(`Build spots available: ${BUILD_SPOTS.length}`);
+  console.log(`Build spots: ${BUILD_SPOTS.length} | Campaign: ${TOTAL_LEVELS} levels`);
   printTowerMetrics();
-  console.log('\n=== Full run (competent play, best placement) ===');
-  runFullGame({ reserveFrac: 0, placement: 'best' });
-  console.log('\n=== Full run (cautious play, 25% reserve, best placement) ===');
-  runFullGame({ reserveFrac: 0.25, placement: 'best' });
-  console.log('\n=== Full run (casual play, imperfect placement) — should mostly win ===');
-  let casualWins = 0;
-  const winLives: number[] = [];
-  const seeds = Array.from({ length: 24 }, (_, i) => i * 37 + 3);
-  for (const seed of seeds) {
-    const r = runFullGame({ reserveFrac: 0.1, placement: 'random', seed, verbose: false });
-    if (r.won) {
-      casualWins++;
-      winLives.push(r.lives);
-    }
-  }
-  winLives.sort((a, b) => a - b);
-  const median = winLives.length ? winLives[Math.floor(winLives.length / 2)] : 0;
-  console.log(`  casual win rate: ${casualWins}/${seeds.length}  (median winning lives ${median})`);
 
-  console.log('\n=== Single-type spam (no type should solo the game = not OP) ===');
-  for (const t of towers) {
-    const r = runSingleType(t.id);
+  console.log('\n=== Full campaign simulation (upgrades + merges) ===');
+  const results: RunResult[] = [];
+  for (const diffId of ['easy', 'medium', 'hard'] as DifficultyId[]) {
+    console.log(`\n── ${difficulties[diffId].label} ──`);
+    const r = runCampaign(diffId, { verbose: true, seed: diffId === 'hard' ? 77 : 42 });
+    results.push(r);
     console.log(
-      `  ${t.icon} ${t.name.padEnd(20)} ${r.won ? 'WON ' : 'LOST'} lives=${String(r.lives).padStart(3)} reached L${r.lastLevel} (${r.towers} towers)`,
+      `  Result: ${r.won ? 'VICTORY' : 'DEFEAT'} at L${r.lastLevel}, lives=${r.lives}, total leaks=${r.totalLeaked}`,
     );
   }
 
-  console.log('\n=== Leave-one-out (each type should matter = none useless) ===');
-  const full = runFullGame({ reserveFrac: 0, placement: 'best', verbose: false });
-  console.log(`  full mix: lives=${full.lives}`);
-  for (const t of towers) {
-    const r = runLeaveOneOut(t.id);
-    console.log(`  without ${t.icon} ${t.name.padEnd(20)} lives=${String(r.lives).padStart(3)} (${r.won ? 'won' : 'LOST'})  Δ=${r.lives - full.lives}`);
+  console.log('\n=== Summary ===');
+  for (const r of results) {
+    const ok = r.won ? '✓' : '✗';
+    console.log(`  ${ok} ${difficulties[r.diffId].label.padEnd(8)} ${r.won ? `cleared all ${TOTAL_LEVELS}` : r.failReason}`);
+  }
+
+  const medium = results.find((r) => r.diffId === 'medium');
+  if (medium && !medium.won) {
+    console.log('\n⚠ Medium difficulty failed — balance may need tuning.');
+    process.exitCode = 1;
   }
 }
+
 main();

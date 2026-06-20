@@ -1,15 +1,15 @@
 # Mystic Forest Defense
 
 An arcane tower-defense game built with React, TypeScript, and React Three Fiber.
-Channel the ancient grove and hold back the creeping dark across ten escalating
-levels, culminating in a fight against the Ancient Forest Corruptor.
+Channel the ancient grove and hold back the creeping dark across 500 levels
+and ten mystic maps, culminating in a fight against the Heartwood Eternal.
 
 ![Mystic Forest Defense](src/assets/hero.png)
 
 ## Gameplay
 
-- **10 hand-tuned levels** with a smooth difficulty curve, ending in a boss
-  finale on Level 10.
+- **500 levels across 10 maps** (50 levels per map) with procedural scaling,
+  boss finales at the end of each act, and a final boss on Level 500.
 - **5 tower types**, each with a distinct role — rapid moonlight arrows, splash
   cannons, snaring thorns, burning firefly motes, and a long-range oak sniper.
 - **5 enemy archetypes** (goblins, brutes, wisps, armored treants, and the boss)
@@ -26,7 +26,7 @@ levels, culminating in a fight against the Ancient Forest Corruptor.
 4. Click a glowing **build spot** on the battlefield to raise the tower. You can
    only build where you can afford it and off the enemy path.
 5. Defeat enemies to earn coins, keep them from reaching the portal, and survive
-   all ten levels. Use **⏸**, **⟲ (restart)**, and **Menu** in the top-right at
+   all 500 levels. Use **⏸**, **⟲ (restart)**, and **Menu** in the top-right at
    any time.
 
 ## Tech stack

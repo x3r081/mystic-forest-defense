@@ -3,7 +3,7 @@ import { getMap, getMapForLevel } from '../data/maps';
 import { getMapTransitionBonus } from '../data/campaignConfig';
 import styles from './LevelTransition.module.css';
 
-/** Shown when entering a new map (every 10 levels). */
+/** Shown when entering a new map (every 50 levels). */
 export function MapTransitionScreen() {
   const level = useGameStore((s) => s.level);
   const coins = useGameStore((s) => s.coins);

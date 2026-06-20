@@ -1,12 +1,13 @@
 /**
- * All 10 battlefield map definitions (10 levels each, 100 total).
+ * All 10 battlefield map definitions ({@link LEVELS_PER_MAP} levels each).
  */
 
-import type { GameMapConfig } from './maps';
+import type { MapTemplate, GameMapConfig, LightingConfig } from './mapTypes';
+import { attachLevelRanges } from './campaignConfig';
 
 const mkLighting = (
-  base: Partial<GameMapConfig['lightingConfig']> & Pick<GameMapConfig['lightingConfig'], 'background' | 'fog' | 'accent' | 'pathColor'>,
-): GameMapConfig['lightingConfig'] => ({
+  base: Partial<LightingConfig> & Pick<LightingConfig, 'background' | 'fog' | 'accent' | 'pathColor'>,
+): LightingConfig => ({
   fogNear: 14,
   fogFar: 38,
   ambient: 0.4,
@@ -19,11 +20,9 @@ const mkLighting = (
   ...base,
 });
 
-export const map1MysticForest: GameMapConfig = {
+export const map1MysticForest: MapTemplate = {
   id: 'mystic-forest',
   name: 'Mystic Forest',
-  levelStart: 1,
-  levelEnd: 10,
   pathPoints: [
     [-12.5, 3], [-9, -2.5], [-5.5, 2.5], [-2, -3], [1.5, 1.5], [5, -2.5], [8.5, 2.5], [12.5, -0.5],
   ],
@@ -46,11 +45,9 @@ export const map1MysticForest: GameMapConfig = {
   bossColor: '#ff3b5c',
 };
 
-export const map2MoonlitRuinsGrove: GameMapConfig = {
+export const map2MoonlitRuinsGrove: MapTemplate = {
   id: 'moonlit-ruins',
   name: 'Moonlit Ruins Grove',
-  levelStart: 11,
-  levelEnd: 20,
   pathPoints: [
     [-13, -5.5], [-10, -1.5], [-7, 3], [-3.5, 4.5], [0, 3.5], [3.5, 4], [5, 0.5], [2, -3.5], [6, -2.5], [10, 1.5], [13, 5.5],
   ],
@@ -84,11 +81,9 @@ export const map2MoonlitRuinsGrove: GameMapConfig = {
   ],
 };
 
-export const map3SunkenMossMarsh: GameMapConfig = {
+export const map3SunkenMossMarsh: MapTemplate = {
   id: 'sunken-moss-marsh',
   name: 'Sunken Moss Marsh',
-  levelStart: 21,
-  levelEnd: 30,
   pathPoints: [
     [-12, -4], [-10, 0], [-8, 3.5], [-5, 1], [-3, -2.5], [0, -3.5], [3, -1], [6, 2.5], [9, 0], [12, 3.5],
   ],
@@ -112,11 +107,9 @@ export const map3SunkenMossMarsh: GameMapConfig = {
   bossColor: '#40c0a0',
 };
 
-export const map4EmberrootHollow: GameMapConfig = {
+export const map4EmberrootHollow: MapTemplate = {
   id: 'emberroot-hollow',
   name: 'Emberroot Hollow',
-  levelStart: 31,
-  levelEnd: 40,
   pathPoints: [
     [-13, 2], [-9, -4], [-5, 3], [-1, -2], [2, 4], [5, -3], [8, 2], [11, -1], [13, -3],
   ],
@@ -140,11 +133,9 @@ export const map4EmberrootHollow: GameMapConfig = {
   bossColor: '#ff8844',
 };
 
-export const map5CrystalCanopy: GameMapConfig = {
+export const map5CrystalCanopy: MapTemplate = {
   id: 'crystal-canopy',
   name: 'Crystal Canopy',
-  levelStart: 41,
-  levelEnd: 50,
   pathPoints: [
     [-12.5, -2], [-9, 3], [-5, -1], [-1, 4], [3, 0], [7, 3], [10, -2], [13, 2],
   ],
@@ -168,11 +159,9 @@ export const map5CrystalCanopy: GameMapConfig = {
   bossColor: '#80d0ff',
 };
 
-export const map6HauntedElderwood: GameMapConfig = {
+export const map6HauntedElderwood: MapTemplate = {
   id: 'haunted-elderwood',
   name: 'Haunted Elderwood',
-  levelStart: 51,
-  levelEnd: 60,
   pathPoints: [
     [-13, 0], [-10, 4], [-6, -3], [-2, 2], [1, -4], [4, 3], [8, -2], [11, 4], [13, 1],
   ],
@@ -196,11 +185,9 @@ export const map6HauntedElderwood: GameMapConfig = {
   bossColor: '#e0f0ff',
 };
 
-export const map7FrostpineSanctuary: GameMapConfig = {
+export const map7FrostpineSanctuary: MapTemplate = {
   id: 'frostpine-sanctuary',
   name: 'Frostpine Sanctuary',
-  levelStart: 61,
-  levelEnd: 70,
   pathPoints: [
     [-12, -5], [-8, -1], [-4, -4], [0, 0], [4, -3], [8, 1], [12, 4],
   ],
@@ -224,11 +211,9 @@ export const map7FrostpineSanctuary: GameMapConfig = {
   bossColor: '#a0d8ff',
 };
 
-export const map8VerdantSkygrove: GameMapConfig = {
+export const map8VerdantSkygrove: MapTemplate = {
   id: 'verdant-skygrove',
   name: 'Verdant Skygrove',
-  levelStart: 71,
-  levelEnd: 80,
   pathPoints: [
     [-13, -3], [-10, 2], [-6, -2], [-2, 4], [2, -1], [6, 3], [10, -3], [13, 4],
   ],
@@ -252,11 +237,9 @@ export const map8VerdantSkygrove: GameMapConfig = {
   bossColor: '#80ffb0',
 };
 
-export const map9ShadowthornLabyrinth: GameMapConfig = {
+export const map9ShadowthornLabyrinth: MapTemplate = {
   id: 'shadowthorn-labyrinth',
   name: 'Shadowthorn Labyrinth',
-  levelStart: 81,
-  levelEnd: 90,
   pathPoints: [
     [-13, -4], [-9, -4], [-9, 0], [-5, 0], [-5, 4], [-1, 4], [-1, -2], [3, -2], [3, 2], [7, 2], [7, -3], [11, -3], [11, 3], [13, 3],
   ],
@@ -280,11 +263,9 @@ export const map9ShadowthornLabyrinth: GameMapConfig = {
   bossColor: '#b080ff',
 };
 
-export const map10HeartAncientForest: GameMapConfig = {
+export const map10HeartAncientForest: MapTemplate = {
   id: 'heart-ancient-forest',
   name: 'Heart of the Ancient Forest',
-  levelStart: 91,
-  levelEnd: 100,
   pathPoints: [
     [-12, 5], [-8, 2], [-4, 4], [0, 0], [4, -3], [8, 1], [11, 4], [13, 6],
   ],
@@ -309,7 +290,7 @@ export const map10HeartAncientForest: GameMapConfig = {
   bossColor: '#ffe080',
 };
 
-export const ALL_MAPS: GameMapConfig[] = [
+export const ALL_MAPS: GameMapConfig[] = attachLevelRanges([
   map1MysticForest,
   map2MoonlitRuinsGrove,
   map3SunkenMossMarsh,
@@ -320,4 +301,4 @@ export const ALL_MAPS: GameMapConfig[] = [
   map8VerdantSkygrove,
   map9ShadowthornLabyrinth,
   map10HeartAncientForest,
-];
+]);

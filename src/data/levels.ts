@@ -1,9 +1,9 @@
 import type { EnemyKind } from './gameConfig';
-import type { MapId } from './maps';
-import { TOTAL_LEVELS } from './maps';
+import type { MapId } from './mapTypes';
+import { TOTAL_LEVELS } from './campaignConfig';
 import { generateLevelConfig } from './levelGenerator';
 
-export { TOTAL_LEVELS } from './maps';
+export { TOTAL_LEVELS } from './campaignConfig';
 
 export interface LevelVisual {
   background: string;
@@ -42,6 +42,8 @@ export interface LevelDef {
   enemyKinds: EnemyKind[];
   visual: LevelVisual;
   boss?: BossDef;
+  /** Weaker guardian on levels 10, 20, 30, 40 within each map act. */
+  miniBoss?: BossDef;
 }
 
 /** Base level data (no difficulty applied). Cached per level. */

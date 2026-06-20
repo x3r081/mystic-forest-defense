@@ -18,6 +18,14 @@ export function applyDifficultyToLevel(level: LevelDef, diff: DifficultyDef): Le
           coinReward: Math.max(1, Math.round(level.boss.coinReward * diff.coinRewardMul)),
         }
       : undefined,
+    miniBoss: level.miniBoss
+      ? {
+          ...level.miniBoss,
+          health: Math.round(level.miniBoss.health * diff.bossHealthMul),
+          speed: level.miniBoss.speed * diff.enemySpeedMul,
+          coinReward: Math.max(1, Math.round(level.miniBoss.coinReward * diff.coinRewardMul)),
+        }
+      : undefined,
   };
 }
 

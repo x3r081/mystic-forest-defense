@@ -1,47 +1,123 @@
 /**
- * Economy snapshot for balance tuning.
+ * Full balance audit report for the 500-level campaign.
  * Run: npx tsx scripts/balanceReport.ts
  */
-import { difficulties, type DifficultyId } from '../src/data/difficulties';
+import {
+  DIFFICULTY_IDS,
+  LEVELS_PER_MAP,
+  MAP_COUNT,
+  TOTAL_LEVELS,
+  collectWarnings,
+  difficulties,
+  fmt,
+  pad,
+  printTowerDpsTable,
+  reportSampleLevels,
+  sampleLevel,
+  upgradeAffordabilityAt,
+  estimateTowerDps,
+  levelIncome,
+} from './balanceMetrics';
 import { getEffectiveLevel } from '../src/data/levelUtils';
-import { TOTAL_LEVELS } from '../src/data/levels';
+import { getLevelInMap } from '../src/data/maps';
+import { getMapTransitionBonus } from '../src/data/campaignConfig';
 
-function levelCoinIncome(round: number, diffId: DifficultyId): number {
+console.log('═══════════════════════════════════════════════════════════════');
+console.log('  MYSTIC FOREST DEFENSE — 500-LEVEL BALANCE AUDIT');
+console.log(`  ${MAP_COUNT} maps × ${LEVELS_PER_MAP} levels = ${TOTAL_LEVELS} total`);
+console.log('═══════════════════════════════════════════════════════════════');
+
+printTowerDpsTable();
+
+const sampleLevels = reportSampleLevels();
+
+for (const diffId of DIFFICULTY_IDS) {
   const diff = difficulties[diffId];
-  const def = getEffectiveLevel(round, diff);
-  let total = def.enemyCount * def.coinReward;
-  if (def.boss) total += def.boss.coinReward;
-  return total;
-}
+  console.log(`\n╔══════════════════════════════════════════════════════════════╗`);
+  console.log(`║  ${diff.label.toUpperCase()} — start ${diff.startingCoins} coins, ${diff.startingLives} lives`);
+  console.log(`║  HP×${diff.enemyHealthMul} Spd×${diff.enemySpeedMul} Count×${diff.enemyCountMul} Coin×${diff.coinRewardMul} BossHP×${diff.bossHealthMul}`);
+  console.log(`╚══════════════════════════════════════════════════════════════╝`);
 
-const REBUILD_COST = 42 * 2 + 54 + 82;
-const STRONG_REBUILD = 42 * 3 + 54 + 100 + 82;
-
-console.log('Basic rebuild (2× Archer + Thorn + Firefly):', REBUILD_COST);
-console.log('Strong rebuild (3× Archer + Thorn + Cannon + Firefly):', STRONG_REBUILD, '\n');
-
-for (const id of ['easy', 'medium', 'hard'] as DifficultyId[]) {
-  const diff = difficulties[id];
-  const incomes: number[] = [];
-
-  console.log(`=== ${diff.label.toUpperCase()} ===`);
-  console.log(`Start: ${diff.startingCoins} coins, ${diff.startingLives} lives`);
-  console.log(`Multipliers: HP×${diff.enemyHealthMul} Spd×${diff.enemySpeedMul} Count×${diff.enemyCountMul} Coin×${diff.coinRewardMul} BossHP×${diff.bossHealthMul}`);
-
-  for (let r = 1; r <= TOTAL_LEVELS; r++) {
-    incomes.push(levelCoinIncome(r, id));
+  console.log('\n── Scaling samples (enemy HP / count / coin per kill) ──');
+  console.log(
+    `${pad('Lv', 5)} ${pad('InMap', 6)} ${pad('HP', 7)} ${pad('Count', 6)} ${pad('Coin', 6)} ${pad('Income', 8)} ${pad('WaveHP', 9)} ${pad('ReqDPS', 7)} Notes`,
+  );
+  for (const lv of sampleLevels) {
+    const s = sampleLevel(lv, diff);
+    const notes: string[] = [];
+    if (s.bossHp) notes.push(`BOSS ${fmt(s.bossHp)}`);
+    if (s.miniBossHp) notes.push(`MINI ${fmt(s.miniBossHp)}`);
+    if (getLevelInMap(lv) === 1 && lv > 1) notes.push('+transition');
+    console.log(
+      `${pad(String(s.level), 5)} ${pad(String(s.levelInMap), 6)} ${pad(fmt(s.enemyHealth), 7)} ${pad(String(s.enemyCount), 6)} ${pad(String(s.coinReward), 6)} ${pad(fmt(s.income), 8)} ${pad(fmt(s.waveHp), 9)} ${pad(fmt(s.reqDps, 1), 7)} ${notes.join(' ')}`,
+    );
   }
 
-  const income10 = incomes.slice(0, 10).reduce((a, b) => a + b, 0);
-  const spent10 = incomes.slice(0, 10).reduce((a, b) => a + Math.round(b * 0.55), 0);
-  const bankAfter10 = diff.startingCoins + income10;
-  const unspentGuess = bankAfter10 - spent10;
-  const atRuins = unspentGuess + diff.mapTransitionBonus;
+  console.log('\n── Map boss HP (levels 50, 100, …, 500) ──');
+  for (let map = 1; map <= MAP_COUNT; map++) {
+    const lv = map * LEVELS_PER_MAP;
+    const def = getEffectiveLevel(lv, diff);
+    console.log(`  Level ${pad(String(lv), 3)}: ${def.boss?.name ?? '?'} — ${fmt(def.boss?.health ?? 0)} HP, ${fmt(def.boss?.coinReward ?? 0)} coins`);
+  }
 
-  console.log(`  Round 11 entry: ~${atRuins} coins (est. bank ${unspentGuess} + ${diff.mapTransitionBonus} bonus)`);
-  console.log(`  Basic rebuild? ${atRuins >= REBUILD_COST ? 'YES' : 'NO'} | Strong rebuild? ${atRuins >= STRONG_REBUILD ? 'YES' : 'NO'}`);
-  console.log(`  Round 10 boss HP: ${getEffectiveLevel(10, diff).boss?.health}`);
-  console.log(`  Round 11 foes: ${getEffectiveLevel(11, diff).enemyCount} × ${getEffectiveLevel(11, diff).enemyHealth} HP, ${getEffectiveLevel(11, diff).coinReward} coins each`);
-  console.log(`  Round 20 boss HP: ${getEffectiveLevel(20, diff).boss?.health}`);
-  console.log(`  Total kill income: ${incomes.reduce((a, b) => a + b, 0)}\n`);
+  console.log('\n── Mini-boss HP (every 10 within act, excl. map finale) ──');
+  for (const actStart of [1, 51, 151, 301]) {
+    if (actStart > TOTAL_LEVELS) break;
+    const miniLine = [10, 20, 30, 40]
+      .map((offset) => {
+        const lv = actStart + offset - 1;
+        if (lv > TOTAL_LEVELS) return null;
+        const def = getEffectiveLevel(lv, diff);
+        return `L${lv}:${fmt(def.miniBoss?.health ?? 0)}`;
+      })
+      .filter(Boolean)
+      .join('  ');
+    console.log(`  Act from ${actStart}: ${miniLine}`);
+  }
+
+  console.log('\n── Upgrade affordability gates (cumulative income, no spending model) ──');
+  for (const gate of [12, 15, 18, 20, 35, 45, 50, 70, 100]) {
+    for (const map of [0, 1, 3, 5, 9]) {
+      const lv = map * LEVELS_PER_MAP + gate;
+      if (lv > TOTAL_LEVELS) continue;
+      const aff = upgradeAffordabilityAt(lv, diffId);
+      const flags = [
+        aff.canUpgradeToL3 ? 'L3✓' : 'L3✗',
+        aff.canUpgradeToL5 ? 'L5✓' : 'L5✗',
+        aff.canMergeHybrid ? 'Merge✓' : 'Merge✗',
+      ].join(' ');
+      console.log(`  Level ${pad(String(lv), 3)} (map ${map + 1} +${gate}): ~${fmt(aff.coins)} coins  ${flags}`);
+    }
+  }
+
+  const incomeTotal = Array.from({ length: TOTAL_LEVELS }, (_, i) =>
+    levelIncome(getEffectiveLevel(i + 1, diff)),
+  ).reduce((a, b) => a + b, 0);
+  console.log(`\n  Total kill income (all ${TOTAL_LEVELS} levels): ${fmt(incomeTotal)} + ${diff.startingCoins} start`);
+  console.log(`  Map transition bonuses (×${MAP_COUNT - 1}): ~${fmt(getMapTransitionBonus(diff, 51) * (MAP_COUNT - 1))} avg`);
+
+  const warnings = collectWarnings(diffId);
+  const shown = warnings.slice(0, 12);
+  console.log(`\n── Warnings (${warnings.length} total, showing ${shown.length}) ──`);
+  if (!shown.length) {
+    console.log('  None — scaling looks healthy.');
+  } else {
+    for (const w of shown) console.log(`  [${w.kind}] ${w.message}`);
+    if (warnings.length > shown.length) {
+      console.log(`  … and ${warnings.length - shown.length} more`);
+    }
+  }
 }
+
+console.log('\n── Reference: competent 6-tower mix DPS ──');
+const mixDps =
+  estimateTowerDps('moon-archer', 5) * 2 +
+  estimateTowerDps('thorn-spire', 4) +
+  estimateTowerDps('crystal-cannon', 4) +
+  estimateTowerDps('firefly-shrine', 3) +
+  estimateTowerDps('lunar-ballista', 3);
+console.log(`  End-of-act mix (2× Archer V, Thorn IV, Cannon IV, Firefly III, Lunar Ballista III): ~${fmt(mixDps, 1)} DPS`);
+
+console.log('\n═══════════════════════════════════════════════════════════════');
+console.log('  Run `npx tsx scripts/balanceSim.ts` for full combat simulation.');
+console.log('═══════════════════════════════════════════════════════════════\n');

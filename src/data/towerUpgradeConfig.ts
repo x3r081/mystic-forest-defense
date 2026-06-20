@@ -27,16 +27,16 @@ export interface TowerLevelDef {
 }
 
 const normalLevels: TowerLevelDef[] = [
-  { level: 1, label: 'I', damageMul: 1, rangeMul: 1, cooldownMul: 1, projectileSpeedMul: 1, scaleMul: 1, emissiveMul: 1, splashMul: 1, slowDurationMul: 1, dotDpsMul: 1, dotDurationMul: 1, upgradeCostFactor: 0.55 },
-  { level: 2, label: 'II', damageMul: 1.2, rangeMul: 1.04, cooldownMul: 0.94, projectileSpeedMul: 1.04, scaleMul: 1.06, emissiveMul: 1.35, splashMul: 1.08, slowDurationMul: 1.08, dotDpsMul: 1.12, dotDurationMul: 1.06, upgradeCostFactor: 0.6 },
-  { level: 3, label: 'III', damageMul: 1.42, rangeMul: 1.08, cooldownMul: 0.88, projectileSpeedMul: 1.08, scaleMul: 1.12, emissiveMul: 1.55, splashMul: 1.15, slowDurationMul: 1.15, dotDpsMul: 1.25, dotDurationMul: 1.12, upgradeCostFactor: 0.65 },
-  { level: 4, label: 'IV', damageMul: 1.68, rangeMul: 1.14, cooldownMul: 0.8, projectileSpeedMul: 1.12, scaleMul: 1.2, emissiveMul: 1.85, splashMul: 1.25, slowDurationMul: 1.22, dotDpsMul: 1.38, dotDurationMul: 1.2, upgradeCostFactor: 0.72 },
+  { level: 1, label: 'I', damageMul: 1, rangeMul: 1, cooldownMul: 1, projectileSpeedMul: 1, scaleMul: 1, emissiveMul: 1, splashMul: 1, slowDurationMul: 1, dotDpsMul: 1, dotDurationMul: 1, upgradeCostFactor: 0.48 },
+  { level: 2, label: 'II', damageMul: 1.2, rangeMul: 1.04, cooldownMul: 0.94, projectileSpeedMul: 1.04, scaleMul: 1.06, emissiveMul: 1.35, splashMul: 1.08, slowDurationMul: 1.08, dotDpsMul: 1.12, dotDurationMul: 1.06, upgradeCostFactor: 0.52 },
+  { level: 3, label: 'III', damageMul: 1.42, rangeMul: 1.08, cooldownMul: 0.88, projectileSpeedMul: 1.08, scaleMul: 1.12, emissiveMul: 1.55, splashMul: 1.15, slowDurationMul: 1.15, dotDpsMul: 1.25, dotDurationMul: 1.12, upgradeCostFactor: 0.56 },
+  { level: 4, label: 'IV', damageMul: 1.68, rangeMul: 1.14, cooldownMul: 0.8, projectileSpeedMul: 1.12, scaleMul: 1.2, emissiveMul: 1.85, splashMul: 1.25, slowDurationMul: 1.22, dotDpsMul: 1.38, dotDurationMul: 1.2, upgradeCostFactor: 0.62 },
   { level: 5, label: 'V', damageMul: 2.05, rangeMul: 1.22, cooldownMul: 0.72, projectileSpeedMul: 1.18, scaleMul: 1.3, emissiveMul: 2.2, splashMul: 1.38, slowDurationMul: 1.32, dotDpsMul: 1.55, dotDurationMul: 1.32, upgradeCostFactor: Infinity },
 ];
 
 const hybridLevels: TowerLevelDef[] = [
-  { level: 1, label: 'I', damageMul: 1, rangeMul: 1, cooldownMul: 1, projectileSpeedMul: 1, scaleMul: 1.08, emissiveMul: 1.4, splashMul: 1, slowDurationMul: 1, dotDpsMul: 1, dotDurationMul: 1, upgradeCostFactor: 0.75 },
-  { level: 2, label: 'II', damageMul: 1.35, rangeMul: 1.08, cooldownMul: 0.88, projectileSpeedMul: 1.08, scaleMul: 1.16, emissiveMul: 1.75, splashMul: 1.15, slowDurationMul: 1.12, dotDpsMul: 1.2, dotDurationMul: 1.1, upgradeCostFactor: 0.85 },
+  { level: 1, label: 'I', damageMul: 1, rangeMul: 1, cooldownMul: 1, projectileSpeedMul: 1, scaleMul: 1.08, emissiveMul: 1.4, splashMul: 1, slowDurationMul: 1, dotDpsMul: 1, dotDurationMul: 1, upgradeCostFactor: 0.65 },
+  { level: 2, label: 'II', damageMul: 1.35, rangeMul: 1.08, cooldownMul: 0.88, projectileSpeedMul: 1.08, scaleMul: 1.16, emissiveMul: 1.75, splashMul: 1.15, slowDurationMul: 1.12, dotDpsMul: 1.2, dotDurationMul: 1.1, upgradeCostFactor: 0.72 },
   { level: 3, label: 'III', damageMul: 1.75, rangeMul: 1.16, cooldownMul: 0.78, projectileSpeedMul: 1.14, scaleMul: 1.26, emissiveMul: 2.1, splashMul: 1.28, slowDurationMul: 1.25, dotDpsMul: 1.4, dotDurationMul: 1.22, upgradeCostFactor: Infinity },
 ];
 

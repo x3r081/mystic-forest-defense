@@ -166,6 +166,21 @@ function buildSpawnQueue(level: number, diff: DifficultyDef): EnemySpec[] {
       isBoss: true,
     };
     queue.splice(Math.floor(queue.length / 3), 0, bossSpec);
+  } else if (def.miniBoss) {
+    const mini = def.miniBoss;
+    const miniSpec: EnemySpec = {
+      kind: 'corruptor',
+      maxHp: mini.health,
+      speed: mini.speed,
+      bounty: mini.coinReward,
+      color: mini.color,
+      radius: mini.radius,
+      armor: enemyTypes.corruptor.armor,
+      opacity: 1,
+      lifeDamage: 2,
+      isBoss: true,
+    };
+    queue.splice(Math.floor(queue.length / 2), 0, miniSpec);
   }
 
   return queue;

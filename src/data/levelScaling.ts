@@ -1,62 +1,69 @@
 /**
- * Procedural level scaling knobs — tune difficulty curves here.
+ * Procedural level scaling knobs — tuned for 50 levels per map act.
  */
 
 import type { EnemyKind } from './gameConfig';
-import { LEVELS_PER_MAP } from './maps';
+import { LEVELS_PER_MAP } from './campaignConfig';
 
 export const levelScaling = {
-  /** Base enemy HP at level 1 before map/difficulty multipliers. */
+  /** Base enemy HP at level 1 of an act (before map/difficulty multipliers). */
   baseEnemyHp: 22,
-  /** Per-level HP growth (compound). */
-  hpGrowth: 1.052,
+  /** Per-level HP growth within a map act (compound). */
+  hpGrowthPerActLevel: 1.042,
   /** Extra HP multiplier per map act index. */
-  mapHpScale: 0.14,
-  /** Base path speed at level 1. */
+  mapHpScale: 0.16,
+  /** Base path speed at act level 1. */
   baseEnemySpeed: 0.082,
-  /** Speed added over full campaign progress (0..1). */
-  speedProgressScale: 0.038,
+  /** Speed added from start to end of an act (0..1 act intensity). */
+  speedActScale: 0.032,
   /** Speed added per map act. */
-  speedMapScale: 0.003,
-  /** Base coin reward at level 1. */
+  speedMapScale: 0.004,
+  /** Base coin reward at act level 1. */
   baseCoinReward: 5,
-  coinPerLevel: 0.24,
-  coinPerMap: 1.5,
-  /** Spawn interval at level 1 (seconds). */
-  baseSpawnRate: 1.28,
-  spawnRatePerLevel: 0.0075,
-  spawnRatePerMap: 0.015,
-  minSpawnRate: 0.48,
+  coinPerActLevel: 0.18,
+  coinPerMap: 2.2,
+  /** Spawn interval at act level 1 (seconds). */
+  baseSpawnRate: 1.22,
+  spawnRatePerActLevel: 0.0045,
+  spawnRatePerMap: 0.012,
+  minSpawnRate: 0.42,
   /** Act entry (first level of maps 2+) — easier rebuild window. */
-  actEntryHpMul: 0.88,
-  actEntrySpawnMul: 1.06,
-  actEntryCoinMul: 1.08,
+  actEntryHpMul: 0.86,
+  actEntrySpawnMul: 1.08,
+  actEntryCoinMul: 1.12,
   /** Boss wave minion tuning. */
-  bossMinionHpMul: 0.92,
-  bossMinionSpawnMul: 0.92,
-  bossMinionCountBase: 14,
-  bossMinionCountPerMap: 1.2,
+  bossMinionHpMul: 0.9,
+  bossMinionSpawnMul: 0.9,
+  bossMinionCountBase: 18,
+  bossMinionCountPerMap: 2,
+  bossMinionCountPerActLevel: 0.12,
   /** Boss stat formula. */
-  bossBaseHp: 5200,
-  bossHpGrowth: 1.32,
-  finalBossHpMul: 1.65,
-  bossCoinBase: 220,
-  bossCoinPerMap: 85,
-  finalBossCoinBonus: 400,
+  bossBaseHp: 4800,
+  bossHpGrowth: 1.28,
+  finalBossHpMul: 1.7,
+  bossCoinBase: 280,
+  bossCoinPerMap: 95,
+  finalBossCoinBonus: 550,
   bossSpeedBase: 0.048,
-  bossSpeedPerMap: 0.0012,
-  bossSpeedMin: 0.028,
+  bossSpeedPerMap: 0.0011,
+  bossSpeedMin: 0.026,
   bossRadiusBase: 1.85,
-  bossRadiusPerMap: 0.04,
-  finalBossRadiusBonus: 0.25,
-  /** When each minion archetype enters the roster (map index OR level-in-map threshold). */
+  bossRadiusPerMap: 0.045,
+  finalBossRadiusBonus: 0.28,
+  /** When each minion archetype enters the roster within a 50-level act. */
   enemyUnlocks: {
     goblin: { minMap: 0, minLevelInMap: 1 },
-    wisp: { minMap: 1, minLevelInMap: 3 },
-    brute: { minMap: 2, minLevelInMap: 5 },
-    treant: { minMap: 4, minLevelInMap: 7 },
+    wisp: { minMap: 0, minLevelInMap: 8 },
+    brute: { minMap: 1, minLevelInMap: 14 },
+    treant: { minMap: 3, minLevelInMap: 26 },
   } satisfies Partial<Record<EnemyKind, { minMap: number; minLevelInMap: number }>>,
-  /** Display names for levels 1–N within each map act. */
+  /** Mini-boss every 10 levels within an act (10, 20, 30, 40 — not map finales). */
+  miniBossHpFrac: [0.22, 0.28, 0.34, 0.4] as readonly number[],
+  miniBossCoinFrac: 0.38,
+  miniBossSpeedMul: 1.08,
+  miniBossMinionCountMul: 0.72,
+  miniBossMinionHpMul: 0.92,
+  /** Display names for milestone levels within each act (cycles for 50-level acts). */
   levelNames: [
     'Whispering Approach',
     'Mossy Crossing',
@@ -69,14 +76,13 @@ export const levelScaling = {
     'Shadow Maw',
     'Guardian Gate',
   ],
-  /** Fallback boss tint if map has no bossColor. */
   bossColorFallback: '#ff3b5c',
 } as const;
 
 export function enemyKindsForLevel(mapIndex: number, levelInMap: number): EnemyKind[] {
   const kinds: EnemyKind[] = [];
   for (const [kind, rule] of Object.entries(levelScaling.enemyUnlocks) as [EnemyKind, { minMap: number; minLevelInMap: number }][]) {
-    if (mapIndex >= rule.minMap || levelInMap >= rule.minLevelInMap) {
+    if (mapIndex >= rule.minMap && levelInMap >= rule.minLevelInMap) {
       kinds.push(kind);
     }
   }
@@ -84,8 +90,11 @@ export function enemyKindsForLevel(mapIndex: number, levelInMap: number): EnemyK
 }
 
 export function levelNameForAct(levelInMap: number): string {
-  const idx = levelInMap - 1;
-  return levelScaling.levelNames[idx] ?? `Trial ${levelInMap}`;
+  const names = levelScaling.levelNames;
+  const milestone = Math.min(names.length, Math.max(1, Math.ceil((levelInMap / LEVELS_PER_MAP) * names.length)));
+  const base = names[milestone - 1] ?? names[0];
+  if (levelInMap === 1 || levelInMap === LEVELS_PER_MAP) return base;
+  return `${base} · ${levelInMap}`;
 }
 
 export function campaignProgress(level: number, totalLevels: number): number {
@@ -94,4 +103,13 @@ export function campaignProgress(level: number, totalLevels: number): number {
 
 export function actIntensity(levelInMap: number): number {
   return (levelInMap - 1) / Math.max(1, LEVELS_PER_MAP - 1);
+}
+
+/** Mini-boss gate levels within each act (10, 20, 30, 40). */
+export function isMiniBossLevel(_level: number, levelInMap: number): boolean {
+  return levelInMap > 0 && levelInMap < LEVELS_PER_MAP && levelInMap % 10 === 0;
+}
+
+export function miniBossStage(levelInMap: number): number {
+  return Math.floor(levelInMap / 10) - 1;
 }

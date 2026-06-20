@@ -203,7 +203,7 @@ function ArmoredTreant({ color, radius }: ModelProps) {
   );
 }
 
-/** Ancient Forest Corruptor — the level 10 boss. */
+/** Ancient Forest Corruptor — act 1 boss (level 50). */
 function Corruptor({ color, radius }: ModelProps) {
   const crown = useRef<Group>(null);
   const shards = useRef<Group>(null);

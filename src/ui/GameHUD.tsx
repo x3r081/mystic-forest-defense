@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGameStore, SPEED_OPTIONS } from '../game/store';
 import { getLevel, TOTAL_LEVELS } from '../data/levels';
-import { getMap, getLevelInMap, LEVELS_PER_MAP } from '../data/maps';
+import { getMap, getLevelInMap } from '../data/maps';
+import { ACT_PROGRESS_SEGMENTS, getActProgressSegment, LEVELS_PER_MAP } from '../data/campaignConfig';
 import { TowerPanel } from './TowerPanel';
 import { TowerDetailsPanel } from './TowerDetailsPanel';
 import { GameModals } from './Modals';
@@ -52,7 +53,6 @@ export function GameHUD() {
   const goToMenu = useGameStore((s) => s.goToMenu);
 
   const def = getLevel(level);
-  const levelInMap = getLevelInMap(level);
   const mapName = getMap(mapId).name;
   const isBoss = !!def.boss;
   const isFinalBoss = level === TOTAL_LEVELS && isBoss;
@@ -170,15 +170,21 @@ export function GameHUD() {
             />
           </div>
           <div className={styles.waveDots}>
-            {Array.from({ length: LEVELS_PER_MAP }).map((_, i) => {
-              const n = i + 1;
+            {Array.from({ length: ACT_PROGRESS_SEGMENTS }).map((_, i) => {
+              const segment = getActProgressSegment(level);
               const cls =
-                n < levelInMap
+                i < segment
                   ? `${styles.dot} ${styles.dotDone}`
-                  : n === levelInMap
+                  : i === segment
                     ? `${styles.dot} ${styles.dotActive}`
                     : styles.dot;
-              return <span key={n} className={cls} title={`Map level ${n}`} />;
+              return (
+                <span
+                  key={i}
+                  className={cls}
+                  title={`Act progress ${i + 1}/${ACT_PROGRESS_SEGMENTS} (level ${getLevelInMap(level)}/${LEVELS_PER_MAP})`}
+                />
+              );
             })}
           </div>
         </div>

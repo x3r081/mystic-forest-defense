@@ -21,7 +21,7 @@ create table if not exists public.leaderboard (
   constraint leaderboard_difficulty_valid
     check (difficulty in ('easy', 'medium', 'hard')),
   constraint leaderboard_level_range
-    check (highest_level_reached between 1 and 100),
+    check (highest_level_reached between 1 and 500),
   constraint leaderboard_enemies_nonneg
     check (enemies_killed >= 0),
   constraint leaderboard_bosses_nonneg
@@ -56,7 +56,7 @@ create policy "leaderboard_anon_insert"
     char_length(trim(player_name)) between 1 and 16
     and score > 0
     and difficulty in ('easy', 'medium', 'hard')
-    and highest_level_reached between 1 and 100
+    and highest_level_reached between 1 and 500
     and enemies_killed >= 0
     and bosses_defeated >= 0
     and merged_towers_created >= 0

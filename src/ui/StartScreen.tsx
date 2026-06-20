@@ -1,5 +1,6 @@
 import { useGameStore } from '../game/store';
 import { gameConfig } from '../data/gameConfig';
+import { TOTAL_LEVELS, MAP_COUNT } from '../data/campaignConfig';
 import styles from './StartScreen.module.css';
 
 export function StartScreen() {
@@ -26,7 +27,7 @@ export function StartScreen() {
         High Scores
       </button>
 
-      <p className={styles.hint}>100 levels · 10 mystic maps · Three difficulties</p>
+      <p className={styles.hint}>{TOTAL_LEVELS} levels · {MAP_COUNT} mystic maps · Three difficulties</p>
     </div>
   );
 }
